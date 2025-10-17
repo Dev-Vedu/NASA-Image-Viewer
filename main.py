@@ -11,8 +11,22 @@ current_date = datetime.today()
 def load_apod(date=None):
     global current_date
     data = fetch_apod(date=date.strftime("%Y-%m-%d") if date else None)
-    current_date = datetime.strptime(data['date'], "%Y-%m-%d")
 
+    if data is None:
+        # Show placeholder image when API fails
+        placeholder = Image.new('RGB', (600, 400), color='gray')
+        tk_img = ImageTk.PhotoImage(placeholder)
+        image_label.config(image=tk_img)
+        image_label.image = tk_img
+        image_label.image_data = placeholder
+
+        title_label.config(text="Offline Mode")
+        desc_label.config(text="Could not fetch NASA image. Please check your internet connection.")
+        date_label.config(text="")
+        video_btn.pack_forget()
+        return
+
+    current_date = datetime.strptime(data['date'], "%Y-%m-%d")
     media_type = data['media_type']
 
     if media_type == 'image':
@@ -22,21 +36,23 @@ def load_apod(date=None):
         tk_img = ImageTk.PhotoImage(img)
         image_label.config(image=tk_img)
         image_label.image = tk_img
-        image_label.image_data = img # stores the current image 
-        video_btn.pack_forget()  #hide the video button beacuse its image
+        image_label.image_data = img
+        video_btn.pack_forget()  # hide video button if image
+
     elif media_type == 'video':
-        
         placeholder = Image.new('RGB', (600, 400), color='black')
         tk_img = ImageTk.PhotoImage(placeholder)
         image_label.config(image=tk_img)
         image_label.image = tk_img
-        video_btn.pack(pady=5)  #video button
+        image_label.image_data = placeholder
+        video_btn.pack(side=LEFT, padx=5)
+        video_btn.url = data['url']
 
-    #updating all values
+    # Update labels
     title_label.config(text=data['title'])
     desc_label.config(text=data['explanation'])
     date_label.config(text=f"Date: {data['date']}")
-    video_btn.url = data['url']  #url of video if its present
+
 def previous_day():
     global current_date
     prev_date = current_date - timedelta(days=1)
@@ -100,6 +116,10 @@ video_btn.pack(side=LEFT, padx=5)
 
 save_btn = Button(btn_frame, text="Save Image", width=12, command=save_image)
 save_btn.pack(side=LEFT, padx=5)
+
+retry_btn = Button(btn_frame, text="Retry", width=12, command=lambda: load_apod(current_date))
+retry_btn.pack(side=LEFT, padx=5)
+
 
 #now last load of todays apod by defalut
 load_apod()
