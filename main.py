@@ -2,6 +2,10 @@ from tkinter import *
 from PIL import Image, ImageTk
 from io import BytesIO
 import requests
+import json
+import os
+from datetime import datetime
+from tkinter import messagebox
 from datetime import datetime, timedelta
 import webbrowser
 from tkinter import filedialog
@@ -11,6 +15,8 @@ current_date = datetime.today()
 def load_apod(date=None):
     global current_date
     data = fetch_apod(date=date.strftime("%Y-%m-%d") if date else None)
+    global current_apod_data
+    current_apod_data = data
 
     if data is None:
         # Show placeholder image when API fails
@@ -65,6 +71,17 @@ def next_day():
 def open_video():
     url = video_btn.url
     webbrowser.open(url)
+def save_video(url):
+    try:
+        video_data = requests.get(url, stream=True)
+        filename = url.split("/")[-1]
+        with open(filename, "wb") as f:
+            for chunk in video_data.iter_content(1024):
+                f.write(chunk)
+        messagebox.showinfo("Saved", f"Video saved as {filename}")
+    except Exception as e:
+        messagebox.showerror("Error", f"Could not save video: {e}")
+
 def save_image():
     if hasattr(image_label, 'image_data'):
         #asking path to user for this....
@@ -89,6 +106,27 @@ top_frame = Frame(root)
 top_frame.pack(pady=10)
 title_label = Label(top_frame, text="", font=("Arial", 18, "bold"), wraplength=650, justify=CENTER)
 title_label.pack()
+# === Search by Date ===
+date_label = Label(root, text="Enter Date (YYYY-MM-DD):", font=("Arial", 10))
+date_label.pack(pady=5)
+
+date_entry = Entry(root, width=20)
+date_entry.pack(pady=5)
+
+def search_by_date():
+    date_str = date_entry.get().strip()
+    if not date_str:
+        messagebox.showerror("Error", "Please enter a date!")
+        return
+    try:
+        date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+        load_apod(date_obj)
+    except ValueError:
+        messagebox.showerror("Error", "Invalid date format! Use YYYY-MM-DD.")
+
+search_btn = Button(root, text="Search", command=search_by_date)
+search_btn.pack(pady=5)
+
 
 image_frame = Frame(root)
 image_frame.pack(pady=10)
@@ -114,6 +152,9 @@ next_btn.pack(side=LEFT, padx=5)
 video_btn = Button(btn_frame, text="Watch Video", width=12, command=open_video)
 video_btn.pack(side=LEFT, padx=5)
 
+save_video_btn = Button(root, text="Save Video", command=lambda: save_video(video_btn.url))
+save_video_btn.pack(pady=5)
+
 save_btn = Button(btn_frame, text="Save Image", width=12, command=save_image)
 save_btn.pack(side=LEFT, padx=5)
 
@@ -121,6 +162,23 @@ retry_btn = Button(btn_frame, text="Retry", width=12, command=lambda: load_apod(
 retry_btn.pack(side=LEFT, padx=5)
 
 
+
+
 #now last load of todays apod by defalut
 load_apod()
+FAV_FILE = "favorites.json"
+
+def add_to_favorites(data):
+    favs = []
+    if os.path.exists(FAV_FILE):
+        with open(FAV_FILE, "r") as f:
+            favs = json.load(f)
+    favs.append(data)
+    with open(FAV_FILE, "w") as f:
+        json.dump(favs, f, indent=4)
+    messagebox.showinfo("Favorites", "Added to favorites!")
+
+add_fav_btn = Button(root, text="Add to Favorites", command=lambda: add_to_favorites(current_apod_data))
+add_fav_btn.pack(pady=5)
+
 root.mainloop()
