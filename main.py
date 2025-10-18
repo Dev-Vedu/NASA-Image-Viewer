@@ -19,7 +19,7 @@ def load_apod(date=None):
     current_apod_data = data
 
     if data is None:
-        # Show placeholder image when API fails
+        #placeholder from here
         placeholder = Image.new('RGB', (600, 400), color='gray')
         tk_img = ImageTk.PhotoImage(placeholder)
         image_label.config(image=tk_img)
@@ -43,7 +43,7 @@ def load_apod(date=None):
         image_label.config(image=tk_img)
         image_label.image = tk_img
         image_label.image_data = img
-        video_btn.pack_forget()  # hide video button if image
+        video_btn.pack_forget() # hide video button if image
 
     elif media_type == 'video':
         placeholder = Image.new('RGB', (600, 400), color='black')
@@ -71,6 +71,68 @@ def next_day():
 def open_video():
     url = video_btn.url
     webbrowser.open(url)
+FAV_FILE = "favorites.json"
+
+def save_to_favorites():
+    if not os.path.exists(FAV_FILE):
+        with open(FAV_FILE, "w") as f:
+            json.dump([], f)
+
+    with open(FAV_FILE, "r") as f:
+        favorites = json.load(f)
+#dulicate fav not allowed
+    for fav in favorites:
+        if fav["date"] == current_apod_data["date"]:
+            print("Already in favorites!")
+            return
+
+    favorites.append({
+        "title": current_apod_data["title"],
+        "date": current_apod_data["date"],
+        "url": current_apod_data["url"]
+    })
+
+    with open(FAV_FILE, "w") as f:
+        json.dump(favorites, f, indent=4)
+
+    print(f"Saved {current_apod_data['title']} to favorites!")
+def view_favorites():
+    if not os.path.exists(FAV_FILE):
+        print("No favorites yet!")
+        return
+
+    with open(FAV_FILE, "r") as f:
+        favorites = json.load(f)
+
+    if not favorites:
+        print("Favorites list is empty!")
+        return
+
+    fav_window = Toplevel(root)
+    fav_window.title("⭐ Your Favorites")
+
+    Label(fav_window, text="Your Saved NASA Images", font=("Arial", 14, "bold")).pack(pady=10)
+
+    for fav in favorites:
+        frame = Frame(fav_window)
+        frame.pack(fill=X, padx=10, pady=2)
+
+        Label(frame, text=f"{fav['date']} - {fav['title']}", wraplength=400, justify=LEFT).pack(side=LEFT)
+
+        btn = Button(frame, text="Open", command=lambda d=fav['date']: load_apod(datetime.strptime(d, "%Y-%m-%d")))
+        btn.pack(side=RIGHT, padx=5)
+FAV_FILE = "favorites.json"
+
+def add_to_favorites(data):
+    favs = []
+    if os.path.exists(FAV_FILE):
+        with open(FAV_FILE, "r") as f:
+            favs = json.load(f)
+    favs.append(data)
+    with open(FAV_FILE, "w") as f:
+        json.dump(favs, f, indent=4)
+    messagebox.showinfo("Favorites", "Added to favorites!")
+
 def save_video(url):
     try:
         video_data = requests.get(url, stream=True)
@@ -140,45 +202,51 @@ date_label.pack()
 desc_label = Label(desc_frame, text="", wraplength=650, justify=LEFT)
 desc_label.pack()
 
+#all btn allined
 btn_frame = Frame(root)
-btn_frame.pack(pady=10)
+btn_frame.pack(pady=15)
 
-prev_btn = Button(btn_frame, text="<< Previous", width=12, command=previous_day)
+#nav btn
+nav_frame = Frame(btn_frame)
+nav_frame.grid(row=0, column=0, pady=5)
+
+prev_btn = Button(nav_frame, text="<< Previous", width=12, command=previous_day)
 prev_btn.pack(side=LEFT, padx=5)
 
-next_btn = Button(btn_frame, text="Next >>", width=12, command=next_day)
+next_btn = Button(nav_frame, text="Next >>", width=12, command=next_day)
 next_btn.pack(side=LEFT, padx=5)
 
-video_btn = Button(btn_frame, text="Watch Video", width=12, command=open_video)
-video_btn.pack(side=LEFT, padx=5)
-
-save_video_btn = Button(root, text="Save Video", command=lambda: save_video(video_btn.url))
-save_video_btn.pack(pady=5)
-
-save_btn = Button(btn_frame, text="Save Image", width=12, command=save_image)
-save_btn.pack(side=LEFT, padx=5)
-
-retry_btn = Button(btn_frame, text="Retry", width=12, command=lambda: load_apod(current_date))
+retry_btn = Button(nav_frame, text="Retry", width=12, command=lambda: load_apod(current_date))
 retry_btn.pack(side=LEFT, padx=5)
 
+#save btn
+save_frame = Frame(btn_frame)
+save_frame.grid(row=1, column=0, pady=5)
 
+save_btn = Button(save_frame, text="Save Image", width=12, command=save_image)
+save_btn.pack(side=LEFT, padx=5)
 
+video_btn = Button(save_frame, text="Watch Video", width=12, command=open_video)
+video_btn.pack(side=LEFT, padx=5)
+
+save_video_btn = Button(save_frame, text="Save Video", width=12, command=lambda: save_video(video_btn.url))
+save_video_btn.pack(side=LEFT, padx=5)
+
+#fav btn
+fav_frame = Frame(btn_frame)
+fav_frame.grid(row=2, column=0, pady=5)
+
+fav_btn = Button(fav_frame, text="⭐ Save to Favorites", width=15, command=save_to_favorites)
+fav_btn.pack(side=LEFT, padx=5)
+
+fav_view_btn = Button(fav_frame, text="🪐 View Favorites", width=15, command=view_favorites)
+fav_view_btn.pack(side=LEFT, padx=5)
+
+add_fav_btn = Button(fav_frame, text="Add to Favorites", width=15, command=lambda: add_to_favorites(current_apod_data))
+add_fav_btn.pack(side=LEFT, padx=5)
 
 #now last load of todays apod by defalut
 load_apod()
-FAV_FILE = "favorites.json"
 
-def add_to_favorites(data):
-    favs = []
-    if os.path.exists(FAV_FILE):
-        with open(FAV_FILE, "r") as f:
-            favs = json.load(f)
-    favs.append(data)
-    with open(FAV_FILE, "w") as f:
-        json.dump(favs, f, indent=4)
-    messagebox.showinfo("Favorites", "Added to favorites!")
-
-add_fav_btn = Button(root, text="Add to Favorites", command=lambda: add_to_favorites(current_apod_data))
-add_fav_btn.pack(pady=5)
 
 root.mainloop()
