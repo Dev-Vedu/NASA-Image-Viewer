@@ -47,6 +47,34 @@ def load_apod(date=None):
         image_label.config(image=tk_img)
         image_label.image = tk_img
         image_label.image_data = img
+        
+    if media_type == "video":
+        image_label.config(image="")  
+        image_label.image = None
+
+        #video btn
+        video_btn.pack(side=LEFT, padx=5)
+        save_video_btn.pack(side=LEFT, padx=5)
+
+        #url store
+        video_url = data["url"]
+
+        def open_video():
+            webbrowser.open(video_url)
+
+        def save_video_link():
+            file_path = filedialog.asksaveasfilename(
+                defaultextension=".txt",
+                filetypes=[("Text Files", "*.txt")]
+            )
+            if file_path:
+                with open(file_path, "w") as f:
+                    f.write(video_url)
+                messagebox.showinfo("Saved", "Video link saved successfully!")
+
+        video_btn.config(command=open_video)
+        save_video_btn.config(command=save_video_link)
+
 
     #for video
     elif media_type == 'video':
