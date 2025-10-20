@@ -1,5 +1,7 @@
 import requests
 import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
+
 API_KEY = "mQgZIgTFzRc9fFelcch7gpH7aIWbKMeggb2iVhDd"
 
 def fetch_apod(date=None):
