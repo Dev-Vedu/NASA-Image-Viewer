@@ -1,6 +1,6 @@
 import requests
-
-API_KEY = "DEMO_KEY"
+import ssl
+API_KEY = "mQgZIgTFzRc9fFelcch7gpH7aIWbKMeggb2iVhDd"
 
 def fetch_apod(date=None):
     """
@@ -9,14 +9,14 @@ def fetch_apod(date=None):
     """
     url = f"https://api.nasa.gov/planetary/apod?api_key={API_KEY}"
     if date:
-        url += f"&date={date}"#format of date
+        url += f"&date={date}"  # format of date
 
     try:
-        response = requests.get(url, timeout=10)  #10-second timeout
-        response.raise_for_status()  #raise error for HTTP errors
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
     except requests.exceptions.RequestException as e:
         print(f"Error fetching data: {e}")
-        return None  # returns None if there is a network error
+        return None
 
     data = response.json()
     return {
