@@ -1,14 +1,14 @@
-import os
 import requests
 
-API_KEY = os.getenv("NASA_API_KEY")
+# ✅ Directly set your NASA API key here
+API_KEY = "mQgZIgTFzRc9fFelcch7gpH7aIWbKMeggb2iVhDd"
 
 def fetch_apod(date=None):
     """
-    Fetch APOD data from NASA API.
-    If date is None, fetches today's image.
+    Fetch APOD (Astronomy Picture of the Day) data from NASA API.
+    If date is None, fetch today's image.
     """
-    url = f'https://api.nasa.gov/planetary/apod?api_key={API_KEY}'
+    url = f"https://api.nasa.gov/planetary/apod?api_key={API_KEY}"
     if date:
         url += f"&date={date}"  # format: 'YYYY-MM-DD'
 
@@ -21,9 +21,9 @@ def fetch_apod(date=None):
 
     data = response.json()
     return {
-        'title': data.get('title'),
-        'url': data.get('url'),
-        'explanation': data.get('explanation'),
-        'date': data.get('date'),
-        'media_type': data.get('media_type', 'image')
+        "title": data.get("title"),
+        "url": data.get("url"),
+        "explanation": data.get("explanation"),
+        "date": data.get("date"),
+        "media_type": data.get("media_type", "image"),
     }
