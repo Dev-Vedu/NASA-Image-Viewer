@@ -14,7 +14,7 @@ def fetch_apod(date=None):
         url += f"&date={date}"  # format of date
 
     try:
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, timeout=30)
         response.raise_for_status()
     except requests.exceptions.RequestException as e:
         print(f"Error fetching data: {e}")
