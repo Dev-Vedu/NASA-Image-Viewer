@@ -11,7 +11,7 @@ def fetch_apod(date=None):
     """
     url = f"https://api.nasa.gov/planetary/apod?api_key={API_KEY}"
     if date:
-        url += f"&date={date}"  # format of date
+        url += f"&date={date}"  #date format
 
     try:
         response = requests.get(url, timeout=30)
